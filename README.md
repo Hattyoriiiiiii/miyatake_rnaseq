@@ -48,15 +48,21 @@ ctrl vs N mutant
 
 
 ```
-Ctrl_rep1,
-Ctrl_rep2,
-G_rep1,
-G_rep2,
-N_rep1,
-N_rep2
+Ctrl_rep1,Con1CD8
+Ctrl_rep2,Con4CD8
+G_rep1,G2CD8
+G_rep2,G3CD8
+N_rep1,N2CD8
+N_rep2,N3CD8
 ```
 
-
+```
+while read line
+do
+    data=
+    ln -s ${before} ${after}
+done < others/sample.txt
+```
 
 
 
@@ -111,8 +117,6 @@ ddf882af2249a3861339f7a77d2fb43b  Con1CD8_1.fq.gz
 4676875cd304a9040874f6f88067819f  N3CD8_1.fq.gz
 b52d6d417ba7077d4ae24db4741108df  N3CD8_2.fq.gz
 ```
-
-![](https://i.imgur.com/FpOgO4L.png)
 
 <br>
 
@@ -326,14 +330,35 @@ exec setpriv --reuid=$USER --regid=$USER --init-groups "$@"
 
 <br>
 
+### 必要なデータのダウンロード
+
+他の場面でも使用する可能性があるので、ローカルに保存しておきます。
+
+```bash
+mkdir -p ~/ref; cd $_
+wget http://igenomes.illumina.com.s3-website-us-east-1.amazonaws.com/Mus_musculus/UCSC/mm10/Mus_musculus_UCSC_mm10.tar.gz && \
+tar xvf Mus_musculus_UCSC_mm10.tar.gz
+
+mkdir mm10
+cp Mus_musculus/UCSC/mm10/Sequence/WholeGenomeFasta/genome.fa* ./mm10/
+cp Mus_musculus/UCSC/mm10/Annotation/Genes/genes.gtf ./mm10/
+```
+
+<br>
+
 ### コンテナの作成
 
 ```
-docker build -t rna-seq:1.0 -f Dockerfile .
+git clone https://github.com/Hattyoriiiiiii/miyatake_rnaseq.git
+docker build -t hattyoriiiiiii/rna-seq:1.0 -f Dockerfile .
 docker run \
     -it \
     --rm \
-    --user root \
+    --name test_rna \
+    -v ${PWD}:/home/you/work \
+    -v ${HOME}/ref/mm10:/home/you/ref \
+    hattyoriiiiiii/rna-seq:1.0 \
+    /bin/bash
 ```
 
 <br>
@@ -366,7 +391,7 @@ LINK=(01_qc/before/multiqc_before 01_qc/after/multiqc_after others scripts summa
 printf "\n <<< Type project name (e.g. RNA_Stra8) >>> \n\n"
 read projname
 
-mkproj ~/project; cd ~/project
+mkproj ~/work; cd ~/work
 
 if [ ! -d ${projname} ]
 then
@@ -395,13 +420,13 @@ for path in "${LINK[@]}"; do
     ln -s ../${path} ${basename}
 done
 
-mkproj ~/PROJECT_REPORTS; cd ~/PROJECT_REPORTS; ln -s ~/project/${projname}/REPORTS_${projname} REPORTS_${projname}
+mkproj ~/PROJECT_REPORTS; cd ~/PROJECT_REPORTS; ln -s ~/work/${projname}/REPORTS_${projname} REPORTS_${projname}
 
 if type tree
 then
-    tree ~/project/${projname}
+    tree ~/work/${projname}
 else
-    pwd; find ~/project/${projname} | sort | sed '1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/|  /g'
+    pwd; find ~/work/${projname} | sort | sed '1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/|  /g'
 fi
 
 echo
@@ -413,14 +438,6 @@ echo
 ## index の作成
 
 STARでmappingするのに必要なindexを作成する。
-
-### 必要なデータのダウンロード
-
-```bash
-wget http://igenomes.illumina.com.s3-website-us-east-1.amazonaws.com/Mus_musculus/UCSC/mm10/Mus_musculus_UCSC_mm10.tar.gz && \
-tar xvf Mus_musculus_UCSC_mm10.tar.gz
-```
-
 
 ### STAR indexの作成
 ```bash=
@@ -464,6 +481,28 @@ mkdir -p ~/indexes/RSEM_reference
 ### 020_fastp.sh
 
 ```
+#!/usr/bin/bash
+
+OUT_PATH='./2_trim'
+
+for sample in `ls ./data/seqs/*.fq.gz | \
+                xargs basename -s .fq.gz | \
+                cut -f 1,2 -d '_' | uniq `
+do
+echo ${sample}_1 ${sample}_2
+
+fastp \
+    -i ./data/seqs/${sample}_1.fq.gz \
+    -I ./data/seqs/${sample}_2.fq.gz \
+    -o ${OUT_PATH}/${sample}_1.fastp.fq.gz \
+    -O ${OUT_PATH}/${sample}_2.fastp.fq.gz \
+    -h ${OUT_PATH}/${sample}.html \
+    -w 16 \
+    -3 \
+    -q 25 \
+    --detect_adapter_for_pe
+
+done
 
 ```
 
@@ -476,6 +515,25 @@ mkdir -p ~/indexes/RSEM_reference
 ### 030_STAR_mapping.sh
 
 ```
+#!/usr/bin/bash
+
+for sample in `ls ./2_trim/*.fq.gz | \
+                xargs basename -s .fq.gz | \
+                cut -f 1,2 -d '_' | uniq `
+do
+STAR \
+    --runMode alignReads \
+    --runThreadN 16 \
+    --outSAMtype BAM SortedByCoordinate \
+    --quantMode TranscriptomeSAM GeneCounts \
+    --genomeDir ~/indexes/STAR_mm10_index \
+    --readFilesCommand gunzip -c \
+    --readFilesIn \
+        ./2_trim/${sample}_1.fastp.fq.gz \
+        ./2_trim/${sample}_2.fastp.fq.gz \
+    --outFileNamePrefix ./3_mapping/${sample}.
+done
+echo finished
 
 ```
 
@@ -488,6 +546,23 @@ mkdir -p ~/indexes/RSEM_reference
 ### 040_RSEM.sh
 
 ```
+#!/usr/bin/bash
+
+for sample in `ls ./3_mapping/*.Aligned.toTranscriptome.out.bam | \
+                xargs basename -s .Aligned.toTranscriptome.out.bam | \
+                cut -f 1,2 -d '_' | uniq`
+do
+rsem-calculate-expression \
+    --num-threads 16 \
+    --alignments \
+    --paired-end \
+    --strandedness reverse \
+    --bam \
+    --no-bam-output \
+    3_mapping/${sample}.Aligned.toTranscriptome.out.bam \
+    ~/indexes/RSEM_reference/RSEM_reference \
+    4_RSEM/${sample} 
+done
 
 ```
 
@@ -502,6 +577,26 @@ mkdir -p ~/indexes/RSEM_reference
 
 ```bash=
 
+cd 3_mapping_smart;
+featureCounts \
+    -p \
+    -s 2 \
+    -T 16 \
+    -t exon \
+    -g gene_id \
+    -M --fraction \
+    -Q 12 \
+    -a ~/ref/Mus_musculus/UCSC/mm10/Annotation/Genes/genes.gtf \
+    -o ../5_featureCounts/counts.txt \
+    34C_PS1.Aligned.sortedByCoord.out.bam \
+    42C_PS1.Aligned.sortedByCoord.out.bam \
+    34C_PS2.Aligned.sortedByCoord.out.bam \
+    42C_PS2.Aligned.sortedByCoord.out.bam \
+    34C_RS1.Aligned.sortedByCoord.out.bam \
+    42C_RS1.Aligned.sortedByCoord.out.bam \
+    34C_RS2.Aligned.sortedByCoord.out.bam \
+    42C_RS2.Aligned.sortedByCoord.out.bam
+
 ```
 
 以下の通りに実行
@@ -512,10 +607,84 @@ mkdir -p ~/indexes/RSEM_reference
 ### multimap (RSEM)
 
 ```bash=
-
+#!/usr/bin/bash
+rsem-generate-data-matrix \
+    4_RSEM_smart/34C_RS1.genes.results \
+    4_RSEM_smart/34C_RS2.genes.results \
+    4_RSEM_smart/42C_RS1.genes.results \
+    4_RSEM_smart/42C_RS2.genes.results \
+    > 5_rsem_counts/GeneExpressionMatrix_RS.tsv
 ```
 
 以下の通りに実行
 `sh scripts/050_count_rsem.sh > log/050_count_rsem.log 2>&1 &`
 
 
+<br>
+
+### edgeR
+
+```
+#!/usr/bin/Rscript
+
+library(edgeR)
+
+INPUT <- "5_rsem_counts/GeneExpressionMatrix_RS.tsv"
+OUTPUT <- "6_diff/edgeR_rsem_res.txt"
+# FIG_PATH <- 
+
+
+data <- read.delim(INPUT, row.names=1, header=F, skip=1)
+print(dim(data))
+browser()
+
+colnames(data) <- c("34C_RS1", "34C_RS2", "42C_RS1", "42C_RS2")
+print(colnames(data)[1:4])
+treatment <- factor(c(rep("34C_RS", 2), rep("42C_RS", 2)))
+y <- DGEList(counts=data[, 1:4], group=treatment)
+
+
+# differential expression
+RunedgeR <- function(y, OUTPUT) {
+    cpm <- cpm(y)
+    keep <- rowSums(cpm > 1) >= 2
+    y_expressed <- y[keep, ]
+    y_norm <- calcNormFactors(y_expressed)
+    d_com <- estimateCommonDisp(y_norm)
+    d_mod <- estimateTagwiseDisp(d_com)
+    out <- exactTest(d_mod)
+    final <- topTags(out, n=nrow(out$table))
+
+    write.table(final, file=OUTPUT, sep="\t", append=F, quote=F)
+    return(final)
+}
+
+
+# plot heatmap
+# pdf("analysis/figure/heatmap_rsem_RS.pdf", height=20)
+# heatmap(y_expressed$counts, labCol=c("34C_RS1", "42C_RS1", "34C_RS2", "42C_RS2"))
+# dev.off()
+
+# Volcano plot
+volcanoData <- cbind(final$table$logFC, -log10(final$table$FDR))
+colnames(volcanoData) <- c("logFC", "-LogPval")
+png("analysis/figure/volcano_rsem_RS.png")
+plot(volcanoData, pch=19)
+dev.off()
+
+
+# limma
+# library(limma)
+
+# design <- model.matrix(~treatment)
+# v <- voom(y_norm, design)
+# vfit <- lmFit(v, design)
+# efit <- eBayes(vfit)
+# voom_res <- topTable(efit, coef=colnames(design)[ncol(design)], adjust.method="BH", sort.by="P", n=nrow(y$counts))
+# write.table(voom_res, "6_diff/voom_res_rsem_RS.txt", sep="\t", append=F)
+
+# # Volcano plot
+# png("6_diff/volcanoplot_rsem_RS.png")
+# volcanoplot(efit, coef=colnames(design)[ncol(design)], highlight=5, names=rownames(efit))
+# dev.off()
+```

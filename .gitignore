@@ -1,3 +1,11 @@
+# Rawdata
+data/
+log/
+*.bam
+*.bai
+*.fastq.gz
+*.fq.gz
+
 # History files
 .Rhistory
 .Rapp.history
