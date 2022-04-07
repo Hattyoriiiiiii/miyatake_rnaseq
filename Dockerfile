@@ -138,7 +138,7 @@ RUN R -e "BiocManager::install(c('edgeR', 'DESeq2', 'limma', 'topGO', 'org.Mm.eg
 
 
 # add user
-ARG username=hattori
+ARG username=you
 ARG wkdir=/home/${username}
 RUN useradd -m ${username}
 COPY entrypoint.sh /
@@ -146,5 +146,8 @@ ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/bin/bash"]
 
 RUN chown -cR ${username}:${username} ${wkdir}
-RUN mkdir -p /home/${username}/genome
+RUN mkdir -p /home/${username}/ref
+RUN mkdir -p /home/${username}/index
+RUN mkdir -p /home/${username}/work/data/rawdata
+
 WORKDIR /home/${username}
