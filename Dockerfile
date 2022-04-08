@@ -46,11 +46,14 @@ RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     liblzma-dev \
     libncurses5-dev \
+    libpcre2-dev \
+    libpcre2-posix2 \
     libreadline-dev \
     make \
     openjdk-8-jdk \
     pcre2-utils \
     python3 \
+    python3-pip \
     tar \
     unzip \
     wget \
@@ -101,6 +104,12 @@ RUN wget ${FASTQC_URL} && \
     chmod +x FastQC_${FASTQC_VERSION}/fastqc && \
     ln -s /usr/local/src/FastQC_${FASTQC_VERSION}/fastqc /usr/local/bin/
 
+# multiqc
+WORKDIR /usr/local/src
+RUN git clone https://github.com/ewels/MultiQC.git && \
+    cd MultiQC && \
+    pip install .
+
 # samtools
 WORKDIR /usr/local/src
 RUN wget ${SAMTOOLS_URL} && \
@@ -119,8 +128,6 @@ RUN wget https://sourceforge.net/projects/pcre/files/pcre2/10.37/pcre2-10.37.tar
     ./configure --prefix=/usr/local/src/pcre2-10.37 --enable-utf8 && \
     make && \
     make install
-
-RUN apt-get update && apt-get install -y libpcre2-posix2 libpcre2-dev
 
 WORKDIR /usr/local/src
 RUN wget http://cran.ism.ac.jp/src/base/R-4/R-4.0.3.tar.gz && \
