@@ -1,0 +1,6 @@
+Con1CD8 Ctrl_rep1
+Con4CD8 Ctrl_rep2
+G2CD8 G_rep1
+G3CD8 G_rep2
+N2CD8 N_rep1
+N3CD8 N_rep2
