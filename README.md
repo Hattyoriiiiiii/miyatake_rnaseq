@@ -19,8 +19,8 @@ ctrl vs N mutant
 ### データ
 - #### Sample
     - Ctrl
-        - rep1 : `Con1CD8_[1,2].fq.gz`
-        - rep2 : `Con4CD8_[1,2].fq.gz`
+        - rep1 : Con1 CD8
+        - rep2 : Con4 CD8
     - G mutant
         - rep1 : G2 CD8
         - rep2 : G3 CD8
@@ -391,7 +391,15 @@ cd miyatake_rnaseq
 - buildにはそこそこ時間がかかります。
 
 ```
-docker build -t hattyoriiiiiii/rna-seq:1.0 -f Dockerfile .
+# こちらは実行しない
+# docker build -t hattyoriiiiiii/rna-seq:1.0 -f Dockerfile .
+```
+
+- 今回は自分が作成した環境を`pull`します。
+- `Dockerfile`を作成して`build`すると作成できます。
+
+```
+docker pull hattyoriiiiiii/rna-seq:1.0
 docker run \
     -it \
     --rm \
