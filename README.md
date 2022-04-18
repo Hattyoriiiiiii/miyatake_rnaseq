@@ -32,39 +32,244 @@ ctrl vs N mutant
 
 
 
-#### データとファイルの対応関係 
-- `factor_celltype_condition_replicate`で記載すると楽になる
+### 構造
 
-- `sample.txt`
-
-| sample_id | group | path |
-| -------- | -------- | -------- |
-| Ctrl_rep1     | Text     | Text     |
-| Ctrl_rep2     | Text     | Text     |
-| G_rep1     | Text     | Text     |
-| G_rep2     | Text     | Text     |
-| N_rep1     | Text     | Text     |
-| N_rep2     | Text     | Text     |
-
+#### 処理前
 
 ```
-Ctrl_rep1,Con1CD8
-Ctrl_rep2,Con4CD8
-G_rep1,G2CD8
-G_rep2,G3CD8
-N_rep1,N2CD8
-N_rep2,N3CD8
+miyatake_rnaseq
+├── Dockerfile
+├── README.md
+├── entrypoint.sh
+├── mkproj.sh
+├── others
+│   ├── group.csv
+│   ├── sample.csv
+│   └── sample.txt
+└── scripts
+    ├── 010_fastqc.sh
+    ├── 020_fastp.sh
+    ├── 030_STAR_mapping.sh
+    ├── 040_RSEM.sh
+    ├── 050_count_rsem.sh
+    └── 060_edger.R
 ```
 
+#### 処理後
+
+<details><summary>詳細</summary>
+
+<br>
+
 ```
-while read line
-do
-    data=
-    ln -s ${before} ${after}
-done < others/sample.txt
+miyatake_rnaseq/
+├── 01_qc
+│   ├── after
+│   │   └── multiqc_after
+│   └── before
+│       ├── Ctrl_rep1_1_fastqc.zip
+│       ├── Ctrl_rep1_2_fastqc.zip
+│       ├── Ctrl_rep2_1_fastqc.zip
+│       ├── Ctrl_rep2_2_fastqc.zip
+│       ├── G_rep1_1_fastqc.zip
+│       ├── G_rep1_2_fastqc.zip
+│       ├── G_rep2_1_fastqc.zip
+│       ├── G_rep2_2_fastqc.zip
+│       ├── N_rep1_1_fastqc.zip
+│       ├── N_rep1_2_fastqc.zip
+│       ├── N_rep2_1_fastqc.zip
+│       ├── N_rep2_2_fastqc.zip
+│       └── multiqc_before
+│           ├── Ctrl_rep1_1_fastqc.html
+│           ├── Ctrl_rep1_2_fastqc.html
+│           ├── Ctrl_rep2_1_fastqc.html
+│           ├── Ctrl_rep2_2_fastqc.html
+│           ├── G_rep1_1_fastqc.html
+│           ├── G_rep1_2_fastqc.html
+│           ├── G_rep2_1_fastqc.html
+│           ├── G_rep2_2_fastqc.html
+│           ├── N_rep1_1_fastqc.html
+│           ├── N_rep1_2_fastqc.html
+│           ├── N_rep2_1_fastqc.html
+│           ├── N_rep2_2_fastqc.html
+│           ├── multiqc_data
+│           │   ├── multiqc.log
+│           │   ├── multiqc_data.json
+│           │   ├── multiqc_fastqc.txt
+│           │   ├── multiqc_general_stats.txt
+│           │   └── multiqc_sources.txt
+│           └── multiqc_report.html
+├── 02_trim
+│   ├── Ctrl_rep1_1.fastp.fastq.gz
+│   ├── Ctrl_rep1_2.fastp.fastq.gz
+│   ├── Ctrl_rep2_1.fastp.fastq.gz
+│   ├── Ctrl_rep2_2.fastp.fastq.gz
+│   ├── G_rep1_1.fastp.fastq.gz
+│   ├── G_rep1_2.fastp.fastq.gz
+│   ├── G_rep2_1.fastp.fastq.gz
+│   ├── G_rep2_2.fastp.fastq.gz
+│   ├── N_rep1_1.fastp.fastq.gz
+│   ├── N_rep1_2.fastp.fastq.gz
+│   ├── N_rep2_1.fastp.fastq.gz
+│   └── N_rep2_2.fastp.fastq.gz
+├── 03_align
+│   ├── Ctrl_rep1.Aligned.sortedByCoord.out.bam
+│   ├── Ctrl_rep1.Aligned.toTranscriptome.out.bam
+│   ├── Ctrl_rep1.Log.final.out
+│   ├── Ctrl_rep1.Log.out
+│   ├── Ctrl_rep1.Log.progress.out
+│   ├── Ctrl_rep1.ReadsPerGene.out.tab
+│   ├── Ctrl_rep1.SJ.out.tab
+│   ├── Ctrl_rep2.Aligned.sortedByCoord.out.bam
+│   ├── Ctrl_rep2.Aligned.toTranscriptome.out.bam
+│   ├── Ctrl_rep2.Log.final.out
+│   ├── Ctrl_rep2.Log.out
+│   ├── Ctrl_rep2.Log.progress.out
+│   ├── Ctrl_rep2.ReadsPerGene.out.tab
+│   ├── Ctrl_rep2.SJ.out.tab
+│   ├── G_rep1.Aligned.sortedByCoord.out.bam
+│   ├── G_rep1.Aligned.toTranscriptome.out.bam
+│   ├── G_rep1.Log.final.out
+│   ├── G_rep1.Log.out
+│   ├── G_rep1.Log.progress.out
+│   ├── G_rep1.ReadsPerGene.out.tab
+│   ├── G_rep1.SJ.out.tab
+│   ├── G_rep2.Aligned.sortedByCoord.out.bam
+│   ├── G_rep2.Aligned.toTranscriptome.out.bam
+│   ├── G_rep2.Log.final.out
+│   ├── G_rep2.Log.out
+│   ├── G_rep2.Log.progress.out
+│   ├── G_rep2.ReadsPerGene.out.tab
+│   ├── G_rep2.SJ.out.tab
+│   ├── N_rep1.Aligned.sortedByCoord.out.bam
+│   ├── N_rep1.Aligned.toTranscriptome.out.bam
+│   ├── N_rep1.Log.final.out
+│   ├── N_rep1.Log.out
+│   ├── N_rep1.Log.progress.out
+│   ├── N_rep1.ReadsPerGene.out.tab
+│   ├── N_rep1.SJ.out.tab
+│   ├── N_rep2.Aligned.sortedByCoord.out.bam
+│   ├── N_rep2.Aligned.toTranscriptome.out.bam
+│   ├── N_rep2.Log.final.out
+│   ├── N_rep2.Log.out
+│   ├── N_rep2.Log.progress.out
+│   ├── N_rep2.ReadsPerGene.out.tab
+│   └── N_rep2.SJ.out.tab
+├── 04_RSEM
+│   ├── Ctrl_rep1.genes.results
+│   ├── Ctrl_rep1.isoforms.results
+│   ├── Ctrl_rep1.stat
+│   │   ├── Ctrl_rep1.cnt
+│   │   ├── Ctrl_rep1.model
+│   │   └── Ctrl_rep1.theta
+│   ├── Ctrl_rep2.genes.results
+│   ├── Ctrl_rep2.isoforms.results
+│   ├── Ctrl_rep2.stat
+│   │   ├── Ctrl_rep2.cnt
+│   │   ├── Ctrl_rep2.model
+│   │   └── Ctrl_rep2.theta
+│   ├── G_rep1.genes.results
+│   ├── G_rep1.isoforms.results
+│   ├── G_rep1.stat
+│   │   ├── G_rep1.cnt
+│   │   ├── G_rep1.model
+│   │   └── G_rep1.theta
+│   ├── G_rep2.genes.results
+│   ├── G_rep2.isoforms.results
+│   ├── G_rep2.stat
+│   │   ├── G_rep2.cnt
+│   │   ├── G_rep2.model
+│   │   └── G_rep2.theta
+│   ├── N_rep1.genes.results
+│   ├── N_rep1.isoforms.results
+│   ├── N_rep1.stat
+│   │   ├── N_rep1.cnt
+│   │   ├── N_rep1.model
+│   │   └── N_rep1.theta
+│   ├── N_rep2.genes.results
+│   ├── N_rep2.isoforms.results
+│   └── N_rep2.stat
+│       ├── N_rep2.cnt
+│       ├── N_rep2.model
+│       └── N_rep2.theta
+├── 05_rsem_counts
+│   └── GeneExpressionMatrix.tsv
+├── 06_diff
+│   ├── Ctrl_vs_G_mut
+│   │   └── Ctrl_vs_G_mut.txt
+│   ├── Ctrl_vs_N_mut
+│   │   └── Ctrl_vs_N_mut.txt
+│   └── G_mut_vs_N_mut
+│       └── G_mut_vs_N_mut.txt
+├── 07_topgo
+├── 08_reactomepa
+├── Dockerfile
+├── QualityAssessment
+├── README.md
+├── REPORTS_RNA_Miyatake
+│   ├── QualityAssessment -> ../QualityAssessment
+│   ├── log -> ../log
+│   ├── multiqc_after -> ../01_qc/after/multiqc_after
+│   ├── multiqc_before -> ../01_qc/before/multiqc_before
+│   ├── notebooks -> ../notebooks
+│   ├── others -> ../others
+│   ├── scripts -> ../scripts
+│   └── summary -> ../summary
+├── data
+│   ├── Ctrl_rep1_1.fastq.gz -> rawdata/Con1CD8_1.fq.gz
+│   ├── Ctrl_rep1_2.fastq.gz -> rawdata/Con1CD8_2.fq.gz
+│   ├── Ctrl_rep2_1.fastq.gz -> rawdata/Con4CD8_1.fq.gz
+│   ├── Ctrl_rep2_2.fastq.gz -> rawdata/Con4CD8_2.fq.gz
+│   ├── G_rep1_1.fastq.gz -> rawdata/G2CD8_1.fq.gz
+│   ├── G_rep1_2.fastq.gz -> rawdata/G2CD8_2.fq.gz
+│   ├── G_rep2_1.fastq.gz -> rawdata/G3CD8_1.fq.gz
+│   ├── G_rep2_2.fastq.gz -> rawdata/G3CD8_2.fq.gz
+│   ├── N_rep1_1.fastq.gz -> rawdata/N2CD8_1.fq.gz
+│   ├── N_rep1_2.fastq.gz -> rawdata/N2CD8_2.fq.gz
+│   ├── N_rep2_1.fastq.gz -> rawdata/N3CD8_1.fq.gz
+│   ├── N_rep2_2.fastq.gz -> rawdata/N3CD8_2.fq.gz
+│   └── rawdata
+│       ├── Con1CD8_1.fq.gz
+│       ├── Con1CD8_2.fq.gz
+│       ├── Con4CD8_1.fq.gz
+│       ├── Con4CD8_2.fq.gz
+│       ├── G2CD8_1.fq.gz
+│       ├── G2CD8_2.fq.gz
+│       ├── G3CD8_1.fq.gz
+│       ├── G3CD8_2.fq.gz
+│       ├── N2CD8_1.fq.gz
+│       ├── N2CD8_2.fq.gz
+│       ├── N3CD8_1.fq.gz
+│       └── N3CD8_2.fq.gz
+├── entrypoint.sh
+├── log
+│   ├── 010_fastqc.log
+│   ├── 020_fastp.log
+│   ├── 030_STAR_mapping.log
+│   ├── 040_RSEM.log
+│   └── 050_count_rsem.log
+├── mkproj.sh
+├── notebooks
+│   ├── data
+│   └── figures
+├── others
+│   ├── group.csv
+│   ├── sample.csv
+│   └── sample.txt
+├── scripts
+│   ├── 010_fastqc.sh
+│   ├── 020_fastp.sh
+│   ├── 030_STAR_mapping.sh
+│   ├── 040_RSEM.sh
+│   ├── 050_count_rsem.sh
+│   ├── 060_edger.R
+│   └── test_edgeR.R
+└── summary
 ```
 
+<br>
 
+</details>
 
 <br>
 
@@ -118,6 +323,22 @@ ddf882af2249a3861339f7a77d2fb43b  Con1CD8_1.fq.gz
 b52d6d417ba7077d4ae24db4741108df  N3CD8_2.fq.gz
 ```
 
+```
+you@56a62152097b:~/work/data$ md5sum -c md5_check.txt 
+G2CD8_1.fq.gz: OK
+G2CD8_2.fq.gz: OK
+G3CD8_1.fq.gz: OK
+G3CD8_2.fq.gz: OK
+N2CD8_1.fq.gz: OK
+N2CD8_2.fq.gz: OK
+Con1CD8_1.fq.gz: OK
+Con1CD8_2.fq.gz: OK
+Con4CD8_1.fq.gz: OK
+Con4CD8_2.fq.gz: OK
+N3CD8_1.fq.gz: OK
+N3CD8_2.fq.gz: OK
+```
+
 <br>
 
 ### Workflow
@@ -137,7 +358,6 @@ b52d6d417ba7077d4ae24db4741108df  N3CD8_2.fq.gz
 ### Environment
 > macbook (pro or air), M1, 16 GB
 - Docker
-- Anaconda
 
 <br>
 
@@ -149,187 +369,6 @@ https://docs.docker.com/desktop/mac/install/
 
 <br>
 
-### aa
-
-```Dockerfile
-FROM ubuntu:20.04
-LABEL maintainer "Tatsuya Hattori"
-
-USER root
-ENV DEBIAN_FRONTEND=noninteractive
-
-##### Tools
-
-# TRIMGALORE
-ARG TRIMGALORE_VERSION=0.6.7
-ARG TRIMGALORE_URL=https://github.com/FelixKrueger/TrimGalore/archive/refs/tags/${TRIMGALORE_VERSION}.tar.gz
-
-# FASTP
-ARG FASTP_VERSION=0.23.1
-ARG FASTP_URL=http://opengene.org/fastp/fastp.${FASTP_VERSION}
-
-# STAR
-ARG STAR_VERSION=2.7.10a
-ARG STAR_URL=https://github.com/alexdobin/STAR/archive/${STAR_VERSION}.tar.gz
-
-# RSEM
-ARG RSEM_VERSION=1.3.3
-ARG RSEM_URL=https://github.com/deweylab/RSEM/archive/v${RSEM_VERSION}.tar.gz
-
-# FASTQC
-ARG FASTQC_VERSION=v0.11.9
-ARG FASTQC_URL=http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_${FASTQC_VERSION}.zip
-
-# SAMTOOLS
-ARG SAMTOOLS_VERSION=1.13
-ARG SAMTOOLS_URL=https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VERSION}/samtools-${SAMTOOLS_VERSION}.tar.bz2
-
-
-
-RUN apt-get update && apt-get install -y \
-    bash \
-    bzip2 \
-    curl \
-    g++ \
-    gcc \
-    gfortran \
-    git \
-    grep \
-    less \
-    libbz2-dev \
-    libcurl4-openssl-dev \
-    liblzma-dev \
-    libncurses5-dev \
-    libreadline-dev \
-    make \
-    openjdk-8-jdk \
-    pcre2-utils \
-    python3 \
-    tar \
-    unzip \
-    wget \
-    xorg-dev \
-    zlib1g-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN ln -s /usr/bin/python3 /usr/bin/python
-
-
-### For trimming -----
-
-# TrimGalore
-WORKDIR /usr/local/src
-RUN wget ${TRIMGALORE_URL} && \
-    tar xzvf ${TRIMGALORE_VERSION}.tar.gz && \
-    ln -s /usr/local/src/TrimGalore-${TRIMGALORE_VERSION}/trim_galore /usr/local/bin/
-
-# fastp
-WORKDIR /usr/local/bin
-RUN wget http://opengene.org/fastp/fastp.${FASTP_VERSION} && \
-    mv fastp.${FASTP_VERSION} fastp && \
-    chmod a+x ./fastp
-
-### For RNA-seq -----
-
-# STAR
-WORKDIR /usr/local/src
-RUN wget ${STAR_URL} && \
-    tar -xzf ${STAR_VERSION}.tar.gz && \
-    cd STAR-${STAR_VERSION} && \
-    ln -s /usr/local/src/STAR-${STAR_VERSION}/bin/Linux_x86_64_static/STAR /usr/local/bin/
-
-# RSEM
-WORKDIR /usr/local/src
-RUN wget ${RSEM_URL} && \
-    tar -zxvf v${RSEM_VERSION}.tar.gz && \
-    cd RSEM-${RSEM_VERSION} && \
-    make install
-
-### Others -----
-# FastQC
-WORKDIR /usr/local/src
-RUN wget ${FASTQC_URL} && \
-    unzip fastqc_${FASTQC_VERSION}.zip && \
-    mv FastQC FastQC_${FASTQC_VERSION} && \
-    chmod +x FastQC_${FASTQC_VERSION}/fastqc && \
-    ln -s /usr/local/src/FastQC_${FASTQC_VERSION}/fastqc /usr/local/bin/
-
-# samtools
-WORKDIR /usr/local/src
-RUN wget ${SAMTOOLS_URL} && \
-    tar jxvf samtools-${SAMTOOLS_VERSION}.tar.bz2 && \
-    cd samtools-${SAMTOOLS_VERSION} && \
-    ./configure && \
-    make && \
-    make install 
-
-
-### For RNA-seq analysis -----
-WORKDIR /usr/local/src
-RUN wget https://sourceforge.net/projects/pcre/files/pcre2/10.37/pcre2-10.37.tar.gz && \
-    tar xzvf pcre2-10.37.tar.gz && \
-    cd pcre2-10.37 && \
-    ./configure --prefix=/usr/local/src/pcre2-10.37 --enable-utf8 && \
-    make && \
-    make install
-
-RUN apt-get update && apt-get install -y libpcre2-posix2 libpcre2-dev
-
-WORKDIR /usr/local/src
-RUN wget http://cran.ism.ac.jp/src/base/R-4/R-4.0.3.tar.gz && \
-    tar xvf R-4.0.3.tar.gz && \
-    cd R-4.0.3 && \
-    ./configure --prefix=/usr/local/src/R-4.0.3 && \
-    make && \
-    ln -s /usr/local/src/R-4.0.3/bin/R /usr/local/bin/
-
-# install required R packages
-RUN R -e "install.packages('BiocManager', repos='https://cran.ism.ac.jp/')" 
-
-# RNA-seq
-RUN R -e "BiocManager::install(c('edgeR', 'DESeq2', 'limma', 'topGO', 'org.Mm.eg.db', 'ReactomePA', 'pathview', 'clusterProfiler'))"
-
-
-# add user
-ARG username=hattori
-ARG wkdir=/home/${username}
-RUN useradd -m ${username}
-COPY entrypoint.sh /
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["/bin/bash"]
-
-RUN chown -cR ${username}:${username} ${wkdir}
-RUN mkdir -p /home/${username}/genome
-WORKDIR /home/${username}
-```
-
-### `entrypoint.sh`
-
-```
-#!/bin/bash
-
-export USER=you
-export HOME=/home/$USER
-
-uid=$(stat -c "%u" .)
-gid=$(stat -c "%g" .)
-
-if [ "$uid" -ne 0 ]; then
-    if [ "$(id -g $USER)" -ne $gid ]; then
-        getent group $gid >/dev/null 2>&1 || groupmod -g $gid $USER
-        chgrp -R $gid $HOME
-    fi
-    if [ "$(id -u $USER)" -ne $uid ]; then
-        usermod -u $uid $USER
-    fi
-fi
-
-exec setpriv --reuid=$USER --regid=$USER --init-groups "$@"
-```
-
-<br>
-
 ### 必要なデータのダウンロード
 
 他の場面でも使用する可能性があるので、ローカルに保存しておきます。
@@ -338,10 +377,6 @@ exec setpriv --reuid=$USER --regid=$USER --init-groups "$@"
 mkdir -p ~/ref; cd $_
 wget http://igenomes.illumina.com.s3-website-us-east-1.amazonaws.com/Mus_musculus/UCSC/mm10/Mus_musculus_UCSC_mm10.tar.gz && \
 tar xvf Mus_musculus_UCSC_mm10.tar.gz
-
-mkdir mm10
-cp Mus_musculus/UCSC/mm10/Sequence/WholeGenomeFasta/genome.fa* ./mm10/
-cp Mus_musculus/UCSC/mm10/Annotation/Genes/genes.gtf ./mm10/
 ```
 
 <br>
@@ -350,6 +385,12 @@ cp Mus_musculus/UCSC/mm10/Annotation/Genes/genes.gtf ./mm10/
 
 ```
 git clone https://github.com/Hattyoriiiiiii/miyatake_rnaseq.git
+cd miyatake_rnaseq
+```
+
+- buildにはそこそこ時間がかかります。
+
+```
 docker build -t hattyoriiiiiii/rna-seq:1.0 -f Dockerfile .
 docker run \
     -it \
@@ -363,74 +404,51 @@ docker run \
 
 <br>
 
-## Settings (RNA-seq用プロジェクトのディレクトリ)
+ここ以降は、コンテナ内での作業になります。
+
+<br>
+
+### ディレクトリの作成
+
+```
+./mkproj.sh
+```
+
+### サンプル名の変更
+
+- `vi others/sample.csv`でファイル作成。
+    - `i`でインサートモードに入って以下を記入。
+    - 記入が終わったら`esc`キーを押して、続けて`:wq`と入力する。
+
+```others/sample.csv
+Con1CD8,Ctrl_rep1,Ctrl
+Con4CD8,Ctrl_rep2,Ctrl
+G2CD8,G_rep1,G_mut
+G3CD8,G_rep2,G_mut
+N2CD8,N_rep1,N_mut
+N3CD8,N_rep2,N_mut
+
+```
+
+<br>
+
+- シンボリックリンクを作成する。
+    - rawdataのファイル名を変更せずに利用するため。
 
 ```bash
-#!/bin/bash
-
-########## <<< functions >>> ##########
-
-function mkproj()
-{
-    if [ ! -d "$@"} ]; then
-        printf "\n Making a directory named \"${@}\" \n"
-        mkdir -p "$@"
-    else
-        printf "\n There is already a directory named \"${@}\" \n"
-    fi
-}
-
-
-########## <<< config >>> ##########
-
-DIR=(data log others summary scripts QualityAssessment 01_qc/{before/multiqc_before,after/multiqc_after} 02_trim 03_align 04_RSEM 05_rsem_counts 06_diff 07_topgo 08_reactomepa notebooks/{data,figures})
-LINK=(01_qc/before/multiqc_before 01_qc/after/multiqc_after others scripts summary log notebooks QualityAssessment)
-
-########## Making directories ##########
-
-printf "\n <<< Type project name (e.g. RNA_Stra8) >>> \n\n"
-read projname
-
-mkproj ~/work; cd ~/work
-
-if [ ! -d ${projname} ]
-then
-    printf "\n ---> Making a directory named \"$projname\" \n"
-    printf "\n <<< ----- Initialization ----- >>> \n\n"
-    mkdir -p ${projname}
-else
-    printf "\n ---> There is already a directory named \"$projname\"\n\n"
-fi
-
-
-cd ${projname}
-for directory in "${DIR[@]}"; do
-    mkproj ${directory}
-done
-
-# For proccesing
-touch README.md others/{sample.txt,rename.sh,rename.csv,SRR_Acc_List.txt}
-
-
-########## make symbolic link ##########
-mkproj REPORTS_${projname}; cd REPORTS_${projname}
-
-for path in "${LINK[@]}"; do
-    basename=`echo ${path} | xargs basename`
-    ln -s ../${path} ${basename}
-done
-
-mkproj ~/PROJECT_REPORTS; cd ~/PROJECT_REPORTS; ln -s ~/work/${projname}/REPORTS_${projname} REPORTS_${projname}
-
-if type tree
-then
-    tree ~/work/${projname}
-else
-    pwd; find ~/work/${projname} | sort | sed '1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/|  /g'
-fi
-
-echo
+while IFS=, read before after condition; do
+    echo "${before}.fq.gz --> ${after}.fastq.gz : ${condition}"
+    ln -s  rawdata/${before}_1.fq.gz data/${after}_1.fastq.gz
+    ln -s  rawdata/${before}_2.fq.gz data/${after}_2.fastq.gz
+done < others/sample.csv
 ```
+
+<br>
+
+```
+cut -d "," -f 2 others/sample.csv > others/sample.txt
+```
+
 
 
 <br>
@@ -443,31 +461,155 @@ STARでmappingするのに必要なindexを作成する。
 ```bash=
 #!/usr/bin/bash
 
+mkdir -p ~/index
 STAR \
-    --runThreadN 16 \
+    --runThreadN 4 \
     --runMode genomeGenerate \
-    --genomeDir ~/indexes/ \
-    --genomeFastaFiles ~/ref/Mus_musculus/UCSC/mm10/Sequence/WholeGenomeFasta/genome.fa \
-    --sjdbGTFfile ~/ref/Mus_musculus/UCSC/mm10/Annotation/Genes/genes.gtf
+    --genomeDir ~/index \
+    --genomeFastaFiles ~/ref/genome.fa \
+    --sjdbGTFfile ~/ref/genes.gtf
 ```
 
+- 基本的なオプションについて
+    - `--runThreadN`: NumberOfThreads
+    - `--runMode`: genomeGenerate (indexの作成を行う)
+    - `--genomeDir`: /path/to/genomeDir
+    - `--genomeFastaFiles`: `/path/to/genome/fasta1 /path/to/genome/fasta2`
+    - `--sjdbGTFfile`: `/path/to/annotations.gtf`
+    - `--sjdbOverhang`: `ReadLength-1`
+
+<br>
 
 ### RSEM indexの作成
 ```bash=
-mkdir -p ~/indexes/RSEM_reference
-~/src/RSEM-1.3.3/rsem-prepare-reference \
-    --num-threads 16 \
-    --gtf ~/ref/Mus_musculus/UCSC/mm10/Annotation/Genes/genes.gtf \
-    ~/ref/Mus_musculus/UCSC/mm10/Sequence/WholeGenomeFasta/genome.fa \
-    ~/indexes/RSEM_reference/RSEM_reference
+mkdir -p ~/index/RSEM_reference
+rsem-prepare-reference \
+    --num-threads 4 \
+    --gtf ~/ref/genes.gtf \
+    ~/ref/genome.fa \
+    ~/index/RSEM_reference/RSEM_reference
+```
+
+- 基本的なオプションについて
+
+
+<br>
+
+## Tips (繰り返し処理)
+
+- シェルスクリプトを作成する理由の1つとして、主に複数サンプルに対して同じ処理をしたいときがあります。そこで2つの処理方法を紹介します。
+    1. 別で繰り返し処理したいサンプルを明記して処理する
+        - 簡単
+        - human errorが生じる可能性
+    2. ファイル名をもとにサンプルを取得して処理する
+        - 少し知識が必要
+        - サンプル数がかなり多くても楽にできる
+
+これらで取得したサンプル名を引数として、処理を行なっていきます。どのような文字列が返ってきているのかを`echo`コマンドを用いて確認してみます。
+
+<br>
+
+### (1) の方法
+先ほど作成した`others/sample.txt`は、以下のようになっています。
+
+- 最も簡単な方法だと思います。
+- サンプル数が多くないため、こちらの方法で進めていきます。
+
+```others/sample.txt
+Ctrl_rep1
+Ctrl_rep2
+G_rep1
+G_rep2
+N_rep1
+N_rep2
+
+```
+
+<br>
+
+### (2) の方法
+
+- 以下の方法は、ある程度詳しくないとできません。ですが、出来るようになるとサンプル数がかなり多くなっても対応できる点で優れていると思います。
+
+```
+for sample in `ls ./data/rawdata/*.fq.gz | \
+               xargs basename -s .fq.gz | \
+               cut -f 1 -d '_' | uniq`
+do 
+    echo "${sample}"
+done
+```
+
+- `ls ./data/rawdata/*.fq.gz | xargs basename -s .fq.gz | cut -f 1 -d '_' | uniq`
+    - `ls`, `xargs`, `cut`, `uniq`という4つのコマンドを使って、それぞれの出力をパイプ(`|`)でつなげています。
+    - ファイルの命名規則を定めることが最も望ましいですが、頂くデータの名前は様々ですので、`echo`コマンドや`wc`コマンドなどで必要なサンプル名が取れているかを確認します。
+
+以下が出力になります。
+
+```
+Con1CD8
+Con4CD8
+G2CD8
+G3CD8
+N2CD8
+N3CD8
+```
+
+<br>
+
+- 以下に、比較として元のファイル名を示します。
+- `data/rawdata`というディレクトリから、`.fq.gz`という拡張子と、paired-end readsのforwardとreverseを表す`_1`, `_2`の部分が除去されてサンプル名のみが取得できていることが確認できました。
+
+```
+% ls -lh data/rawdata 
+total 26100480
+-rw-r--r--@ 1 hattori  staff   814M  4  6 22:02 Con1CD8_1.fq.gz
+-rw-r--r--@ 1 hattori  staff   840M  4  7 12:03 Con1CD8_2.fq.gz
+-rw-r--r--@ 1 hattori  staff   1.0G  4  7 12:06 Con4CD8_1.fq.gz
+-rw-r--r--@ 1 hattori  staff   1.0G  4  7 12:11 Con4CD8_2.fq.gz
+-rw-r--r--@ 1 hattori  staff   1.1G  4  7 12:13 G2CD8_1.fq.gz
+-rw-r--r--@ 1 hattori  staff   1.2G  4  7 12:12 G2CD8_2.fq.gz
+-rw-r--r--@ 1 hattori  staff   1.1G  4  7 12:12 G3CD8_1.fq.gz
+-rw-r--r--@ 1 hattori  staff   1.1G  4  7 12:13 G3CD8_2.fq.gz
+-rw-r--r--@ 1 hattori  staff   1.1G  4  7 12:13 N2CD8_1.fq.gz
+-rw-r--r--@ 1 hattori  staff   1.2G  4  7 12:13 N2CD8_2.fq.gz
+-rw-r--r--@ 1 hattori  staff   1.0G  4  7 12:12 N3CD8_1.fq.gz
+-rw-r--r--@ 1 hattori  staff   1.0G  4  7 12:12 N3CD8_2.fq.gz
 ```
 
 <br>
 
 ## Assessing Read Quality
+- リードクオリティの確認を行う。
 ### 010_fastqc.sh
 
-```
+```010_fastqc.sh
+#!/usr/bin/bash
+# usage : scripts/010_fastqc.sh > log/010_fastqc.log 2>&1 &
+
+############## config ##############
+
+exp="fastp"
+cores=4
+
+OUTDIR_FASTQC_BEFORE='01_qc/before'
+REPODIR_FASTQC_BEFORE='01_qc/before/multiqc_before'
+
+if [ ! -d ${OUTDIR_FASTQC_BEFORE} ]; then mkdir -p ${OUTDIR_FASTQC_BEFORE}; fi
+if [ ! -d ${REPODIR_FASTQC_BEFORE} ]; then mkdir -p ${REPODIR_FASTQC_BEFORE}; fi
+
+
+############## FastQC - Before trimming ##############
+
+fastqc \
+    -t ${cores} \
+    --nogroup \
+    -f fastq \
+    data/*.fastq.gz \
+    -o ${OUTDIR_FASTQC_BEFORE}
+
+multiqc ${OUTDIR_FASTQC_BEFORE} -o ${REPODIR_FASTQC_BEFORE}
+mv ${OUTDIR_FASTQC_BEFORE}/*.html ${REPODIR_FASTQC_BEFORE}/
 
 ```
 
@@ -477,33 +619,34 @@ mkdir -p ~/indexes/RSEM_reference
 <br>
 
 ## Read trimming
-
+- 低品質なリード、アダプターの除去を行う。
 ### 020_fastp.sh
 
 ```
 #!/usr/bin/bash
+# usage : sh scripts/020_fastp.sh > log/020_fastp.log 2>&1 &
 
-OUT_PATH='./2_trim'
+exp='fastp'
+OUT_PATH='./02_trim'
+REPODIR_TRIM='${OUT_PATH}/${exp}'
 
-for sample in `ls ./data/seqs/*.fq.gz | \
-                xargs basename -s .fq.gz | \
-                cut -f 1,2 -d '_' | uniq `
-do
+while read sample; do
 echo ${sample}_1 ${sample}_2
-
 fastp \
-    -i ./data/seqs/${sample}_1.fq.gz \
-    -I ./data/seqs/${sample}_2.fq.gz \
-    -o ${OUT_PATH}/${sample}_1.fastp.fq.gz \
-    -O ${OUT_PATH}/${sample}_2.fastp.fq.gz \
-    -h ${OUT_PATH}/${sample}.html \
+    -i ./data/${sample}_1.fastq.gz \
+    -I ./data/${sample}_2.fastq.gz \
+    -o ${OUT_PATH}/${sample}_1.fastp.fastq.gz \
+    -O ${OUT_PATH}/${sample}_2.fastp.fastq.gz \
+    -h ${REPODIR_TRIM}/${sample}.html \
+    -j ${REPODIR_TRIM}/${sample}.json \
     -w 16 \
     -3 \
     -q 25 \
     --detect_adapter_for_pe
+done < others/sample.txt
 
-done
 
+multiqc ${REPODIR_TRIM} -o ${REPODIR_TRIM}
 ```
 
 以下の通りに実行
@@ -512,15 +655,14 @@ done
 <br>
 
 ## mapping
+- リファレンスゲノムに対して、得られたリードのアラインメントを行う。
 ### 030_STAR_mapping.sh
 
 ```
-#!/usr/bin/bash
+#!/bin/bash
+# usage : sh scripts/030_STAR_mapping.sh > log/030_STAR_mapping.log 2>&1 &
 
-for sample in `ls ./2_trim/*.fq.gz | \
-                xargs basename -s .fq.gz | \
-                cut -f 1,2 -d '_' | uniq `
-do
+while read sample; do
 STAR \
     --runMode alignReads \
     --runThreadN 16 \
@@ -529,10 +671,10 @@ STAR \
     --genomeDir ~/indexes/STAR_mm10_index \
     --readFilesCommand gunzip -c \
     --readFilesIn \
-        ./2_trim/${sample}_1.fastp.fq.gz \
-        ./2_trim/${sample}_2.fastp.fq.gz \
-    --outFileNamePrefix ./3_mapping/${sample}.
-done
+        ./02_trim/${sample}_1.fastp.fastq.gz \
+        ./02_trim/${sample}_2.fastp.fastq.gz \
+    --outFileNamePrefix ./03_align/${sample}.
+done < others/sample.txt
 echo finished
 
 ```
@@ -543,28 +685,31 @@ echo finished
 <br>
 
 ## 発現定量
+
+- 定量値を取得する。
+
 ### 040_RSEM.sh
 
 ```
 #!/usr/bin/bash
+# usage : scripts/040_RSEM.sh > log/040_RSEM.log 2>&1 &
 
-for sample in `ls ./3_mapping/*.Aligned.toTranscriptome.out.bam | \
-                xargs basename -s .Aligned.toTranscriptome.out.bam | \
-                cut -f 1,2 -d '_' | uniq`
-do
+while read sample; do
 rsem-calculate-expression \
     --num-threads 16 \
     --alignments \
     --paired-end \
-    --strandedness reverse \
+    --strandedness none \
     --bam \
     --no-bam-output \
     3_mapping/${sample}.Aligned.toTranscriptome.out.bam \
     ~/indexes/RSEM_reference/RSEM_reference \
     4_RSEM/${sample} 
-done
+done < others/sample.txt
 
 ```
+
+- strandedのkitを利用した場合、`--strandness reverse`に変更する。
 
 以下の通りに実行
 `sh scripts/040_RSEM.sh > log/040_RSEM.log 2>&1 &`
@@ -573,47 +718,18 @@ done
 
 ## リードカウント
 
-### multimap (featureCounts)
+### RSEM
 
-```bash=
+- リードカウントの行列データ(matrix)の作成を行う。
 
-cd 3_mapping_smart;
-featureCounts \
-    -p \
-    -s 2 \
-    -T 16 \
-    -t exon \
-    -g gene_id \
-    -M --fraction \
-    -Q 12 \
-    -a ~/ref/Mus_musculus/UCSC/mm10/Annotation/Genes/genes.gtf \
-    -o ../5_featureCounts/counts.txt \
-    34C_PS1.Aligned.sortedByCoord.out.bam \
-    42C_PS1.Aligned.sortedByCoord.out.bam \
-    34C_PS2.Aligned.sortedByCoord.out.bam \
-    42C_PS2.Aligned.sortedByCoord.out.bam \
-    34C_RS1.Aligned.sortedByCoord.out.bam \
-    42C_RS1.Aligned.sortedByCoord.out.bam \
-    34C_RS2.Aligned.sortedByCoord.out.bam \
-    42C_RS2.Aligned.sortedByCoord.out.bam
-
-```
-
-以下の通りに実行
-`sh scripts/050_count_multi.sh > log/050_count_multi.log 2>&1 &`
-
-<br>
-
-### multimap (RSEM)
-
-```bash=
+```050_count_rsem.sh
 #!/usr/bin/bash
+# usage : sh scripts/050_count_rsem.sh > log/050_count_rsem.log 2>&1 &
+
 rsem-generate-data-matrix \
-    4_RSEM_smart/34C_RS1.genes.results \
-    4_RSEM_smart/34C_RS2.genes.results \
-    4_RSEM_smart/42C_RS1.genes.results \
-    4_RSEM_smart/42C_RS2.genes.results \
-    > 5_rsem_counts/GeneExpressionMatrix_RS.tsv
+    `ls 04_RSEM/*.genes.results` \
+    > 05_rsem_counts/GeneExpressionMatrix.tsv
+
 ```
 
 以下の通りに実行
@@ -624,67 +740,99 @@ rsem-generate-data-matrix \
 
 ### edgeR
 
+edgeRは以下のdocsがよくできている。
+https://www.bioconductor.org/packages/release/bioc/vignettes/edgeR/inst/doc/edgeRUsersGuide.pdf
+
+2回比較を行うので
+
+```others/group.csv
+Ctrl,G_mut
+Ctrl,N_mut
+
+```
+
+上記のようなファイルを作成する。
+
+<br>
+
+以下のscriptは、`others`ディレクトリを操作するだけで比較対象を変えられるようにした。
+
 ```
 #!/usr/bin/Rscript
 
+# libralies : ライブラリ
 library(edgeR)
+library(dplyr)
 
-INPUT <- "5_rsem_counts/GeneExpressionMatrix_RS.tsv"
-OUTPUT <- "6_diff/edgeR_rsem_res.txt"
-# FIG_PATH <- 
+# config : ファイル名等
+matrix.path <- "05_rsem_counts/GeneExpressionMatrix.tsv"
+sample.path <- "others/sample.csv"
+group.deg <- read.table("others/group.csv", sep=",")
 
+# 同じ処理を繰り返すための関数
+ReadExpMatrix <- function(INPUT, SAMPLES) {
 
-data <- read.delim(INPUT, row.names=1, header=F, skip=1)
-print(dim(data))
-browser()
+    df_exp <- read.delim(INPUT, row.names=1, header=F, skip=1)
 
-colnames(data) <- c("34C_RS1", "34C_RS2", "42C_RS1", "42C_RS2")
-print(colnames(data)[1:4])
-treatment <- factor(c(rep("34C_RS", 2), rep("42C_RS", 2)))
-y <- DGEList(counts=data[, 1:4], group=treatment)
+    sample.metadata <- read.table(SAMPLES, sep=",")
+    colnames(df_exp) <- sample.metadata[,2]
 
-
-# differential expression
-RunedgeR <- function(y, OUTPUT) {
-    cpm <- cpm(y)
-    keep <- rowSums(cpm > 1) >= 2
-    y_expressed <- y[keep, ]
-    y_norm <- calcNormFactors(y_expressed)
-    d_com <- estimateCommonDisp(y_norm)
-    d_mod <- estimateTagwiseDisp(d_com)
-    out <- exactTest(d_mod)
-    final <- topTags(out, n=nrow(out$table))
-
-    write.table(final, file=OUTPUT, sep="\t", append=F, quote=F)
-    return(final)
+    treatment <- factor(as.vector(sample.metadata[,3]))
+    return(DGEList(counts=df_exp, group=treatment))
 }
 
 
-# plot heatmap
-# pdf("analysis/figure/heatmap_rsem_RS.pdf", height=20)
-# heatmap(y_expressed$counts, labCol=c("34C_RS1", "42C_RS1", "34C_RS2", "42C_RS2"))
-# dev.off()
-
-# Volcano plot
-volcanoData <- cbind(final$table$logFC, -log10(final$table$FDR))
-colnames(volcanoData) <- c("logFC", "-LogPval")
-png("analysis/figure/volcano_rsem_RS.png")
-plot(volcanoData, pch=19)
-dev.off()
+RunEdgeRNorm <- function(y) {
+    cpm <- cpm(y)
+    keep <- rowSums(cpm > 1) >= 2
+    y_expressed <- y[keep, ]
+    y_norm <- calcNormFactors(y_expressed)  # Normalizing the data
+    d_com <- estimateCommonDisp(y_norm)  # Estimating the Dispersion
+    d_mod <- estimateTagwiseDisp(d_com)  # for routine differential expresion analysis
+    return(d_mod)
+}
 
 
-# limma
-# library(limma)
+# 業務には含まれないためskip
+plot_basics <- function() {
+    plotMDS(d, ,ethof="bcv", col=as.numeric(d$samples$group))
+    legend("bottomleft", as.character(unique(d$samples$group)), col=1:3, pch=20)
 
-# design <- model.matrix(~treatment)
-# v <- voom(y_norm, design)
-# vfit <- lmFit(v, design)
-# efit <- eBayes(vfit)
-# voom_res <- topTable(efit, coef=colnames(design)[ncol(design)], adjust.method="BH", sort.by="P", n=nrow(y$counts))
-# write.table(voom_res, "6_diff/voom_res_rsem_RS.txt", sep="\t", append=F)
+    p_bcv <- plotBCV(d_mod)
+    pdf(out.bcv)
+    print(p_bcv)
+    dev.off()
+}
 
-# # Volcano plot
-# png("6_diff/volcanoplot_rsem_RS.png")
-# volcanoplot(efit, coef=colnames(design)[ncol(design)], highlight=5, names=rownames(efit))
-# dev.off()
+
+main <- function() {
+    df <- ReadExpMatrix(matrix.path, sample.path)
+    d <- RunEdgeRNorm(y=df)
+
+    for (i in 1:dim(group.deg)[1]) {
+        grp <- asplit(as.matrix(group.deg), 1)[[i]] %>% as.vector()
+        sample1 <- grp[1]
+        sample2 <- grp[2]
+
+        BatchName <- paste0(sample1, "_vs_", sample2)
+        par.dir <- file.path("06_diff", BatchName)
+        dir.create(par.dir, recursive=T)
+        table.path <- file.path(par.dir, paste0(BatchName, ".txt"))
+
+        # 実際の処理
+        et <- exactTest(d, pair=c(sample1, sample2))
+        final <- topTags(et, n=nrow(et$table))
+
+        write.table(final, file=table.path, sep="\t", append=F, quote=F)
+    }
+}
+
+main()
 ```
+
+<br>
+
+以下の通りに実行
+`Rscript scripts/060_edger.R`
+
+
